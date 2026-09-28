@@ -6,7 +6,32 @@
 </head>
 
 <body>
-    Hello world
+    <header>
+        <button>Sitelink</button>
+    </header>
+    <div>
+        <form action="javascript:startGame()" class="mainmenu">
+            <label>OPENWORDLE</label>
+            <div>
+                <div>
+                    <label>Word length</label>
+                    <input class="wordlength" type="number" min="3" max="10" value="5" />
+                </div>
+                <div>
+                    <label>Attempts</label>
+                    <input class="attempts" type="number" min="1" max="10" value="6" />
+                </div>
+            </div>
+            <input type="submit" value="PLAY" />
+        </form>
+        <form action="javascript:guess()" class="game" style="visibility:hidden">
+            <div class="board" style="width:500px">
+            </div>
+            <input type="submit" value="GUESS" />
+            <button onclick="returnToMenu();">BACK</button>
+        </form>
+    </div>
+    <script src="game.js"></script>
 </body>
 
 </html>
