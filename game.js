@@ -2,6 +2,7 @@ function startGame() {
     // Gather game settings
     const word_length = document.querySelector(".wordlength").value;
     const attempts = document.querySelector(".attempts").value;
+    const difficulty = document.querySelector(".difficulty").value;
 
     localStorage.setItem('wordlength', word_length);
     localStorage.setItem('attempts', attempts);
@@ -19,11 +20,31 @@ function startGame() {
             const wordlist = data.split('\n');
 
             localStorage.setItem("wordlist", wordlist);
+            let words_to_include = wordlist.length;
 
-            const secret_word = wordlist[Math.floor(Math.random() * wordlist.length)];
+            switch(difficulty) {
+                case "0":
+                    if (words_to_include > 250)
+                    {
+                        words_to_include = 250;
+                    }
+                    break;
+                case "1":
+                    if (words_to_include > 1000)
+                    {
+                        words_to_include = 1000;
+                    }
+                    break;
+                case "2":
+                    if (words_to_include > 2500)
+                    {
+                        words_to_include = 2500;
+                    }
+                    break;
+            } 
+
+            const secret_word = wordlist[Math.floor(Math.random() * words_to_include)];
             console.log(secret_word);
-
-            localStorage.setItem("secretword", secret_word);
         })
         .catch(error => {
             console.error('There was a problem with the fetch operation:', error);

@@ -22,6 +22,15 @@
                     <input class="attempts" type="number" min="1" max="10" value="6" />
                 </div>
             </div>
+            <div>
+                <label></label>
+                <select id="words" value="0" class="difficulty">
+                    <option value="0">250 most common</option>
+                    <option value="1">1000 most common</option>
+                    <option value="2">2500 most common</option>
+                    <option value="3">All available words</option>
+                </select>
+            </div>
             <input type="submit" value="PLAY" />
         </form>
         <form action="javascript:guess()" class="game" style="visibility:hidden">
