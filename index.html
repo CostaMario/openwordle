@@ -34,10 +34,20 @@
             <input type="submit" value="PLAY" />
         </form>
         <form action="javascript:guess()" class="game" style="visibility:hidden">
+            <div class="endscreen">
+                <div>YOU WIN</div>
+                <div>The word was </div>
+            </div>
             <div class="board" style="width:500px">
             </div>
-            <input type="submit" value="GUESS" />
-            <button onclick="returnToMenu();">BACK</button>
+            <div class="regularbuttons">
+                <input type="submit" value="GUESS" />
+                <button onclick="backspace();" type="button">ERASE</button>
+            </div>
+            <div class="endbuttons">
+                <button onclick="startGame();" type="button">RETRY</button>
+                <button onclick="returnToMenu();" type="button">BACK</button>
+            </div>
         </form>
     </div>
     <script src="game.js"></script>

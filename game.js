@@ -22,29 +22,26 @@ function startGame() {
             localStorage.setItem("wordlist", wordlist);
             let words_to_include = wordlist.length;
 
-            switch(difficulty) {
+            switch (difficulty) {
                 case "0":
-                    if (words_to_include > 250)
-                    {
+                    if (words_to_include > 250) {
                         words_to_include = 250;
                     }
                     break;
                 case "1":
-                    if (words_to_include > 1000)
-                    {
+                    if (words_to_include > 1000) {
                         words_to_include = 1000;
                     }
                     break;
                 case "2":
-                    if (words_to_include > 2500)
-                    {
+                    if (words_to_include > 2500) {
                         words_to_include = 2500;
                     }
                     break;
-            } 
+            }
 
             const secret_word = wordlist[Math.floor(Math.random() * words_to_include)];
-            console.log(secret_word);
+            localStorage.setItem("secretword", secret_word.toUpperCase());
         })
         .catch(error => {
             console.error('There was a problem with the fetch operation:', error);
@@ -57,7 +54,13 @@ function startGame() {
     const game = document.querySelector(".game");
     game.style.visibility = "visible";
 
+    document.querySelector(".regularbuttons").style.visibility = "visible";
+    document.querySelector(".endbuttons").style.visibility = "hidden";
+    document.querySelector(".endscreen").style.visibility = "hidden";
+
     // populate board
+    clearBoard();
+
     const board = document.querySelector(".board");
 
     for (let i = 0; i < attempts; i++) {
@@ -97,8 +100,9 @@ function startGame() {
         board.appendChild(line);
     }
 
-    localStorage.setItem('current_attempt', 0);
+    board.appendChild(prepareKeyboard());
 
+    localStorage.setItem('current_attempt', 0);
     enableAndSelectCurrent();
 }
 
@@ -135,6 +139,56 @@ function renderInput(id, value) {
     }
 }
 
+function prepareKeyboard() {
+    const rows = [
+        "QWERTYUIOP",
+        "ASDFGHJKL",
+        "ZXCVBNM"
+    ];
+
+    const keyboard = document.createElement("div");
+    keyboard.className = "keyboard";
+
+    for (let i = 0; i < rows.length; i++) {
+        const current_row = document.createElement("div");
+        //current_row.style.display = "inline-block";
+
+        for (let j = 0; j < rows[i].length; j++) {
+            const key = document.createElement("button");
+
+            key.style.display = "inline";
+            key.textContent = rows[i][j];
+            key.type = "button";
+            key.onclick = function() {
+                const attempt = localStorage.getItem('current_attempt');
+                const word_length = localStorage.getItem('wordlength');
+                const line = document.querySelector(".board").children[attempt].children[0];
+                if (line.value.length < word_length) {
+                    line.value += rows[i][j];
+                }
+
+                renderInput(attempt, line.value);
+            };
+
+            current_row.appendChild(key);
+        }
+        keyboard.appendChild(current_row);
+    }
+
+    return keyboard;
+}
+
+function backspace() {
+    const attempt = localStorage.getItem('current_attempt');
+    const word_length = localStorage.getItem('wordlength');
+    const line = document.querySelector(".board").children[attempt].children[0];
+
+    if (line.value.length > 0) {
+        line.value = line.value.slice(0, -1);
+        renderInput(attempt, line.value);
+    }
+}
+
 function enableAndSelectCurrent(input) {
     console.log(input)
 
@@ -156,8 +210,42 @@ function enableAndSelectCurrent(input) {
     }
 }
 
+function gradeGuess(guess) {
+    const secret_word = localStorage.getItem("secretword");
+    let grade = "";
+
+    let letters_count = {};
+    for (let i = 0; i < secret_word.length; i++) {
+        if (secret_word[i] in letters_count) {
+            letters_count[secret_word[i]]++;
+        } else {
+            letters_count[secret_word[i]] = 1;
+        }
+    }
+    for (let i = 0; i < secret_word.length; i++) {
+        if (guess[i] == secret_word[i]) {
+            grade += "2";
+            letters_count[guess[i]]--;
+        }
+        else {
+            grade += "0";
+        }
+    }
+
+    for (let i = 0; i < secret_word.length; i++) {
+        if (grade[i] != "2" && guess[i] in letters_count && letters_count[guess[i]] > 0) {
+            letters_count[guess[i]]--;
+            grade[i] = "1";
+        }
+    }
+
+    return grade;
+}
+
 function guess() {
     const board = document.querySelector(".board");
+    const keyboard = document.querySelector(".keyboard");
+
     const attempt = localStorage.getItem('current_attempt');
     if (attempt >= board.children.length) {
         return;
@@ -166,8 +254,7 @@ function guess() {
     const guess = board.children[attempt].children[0].value;
     const wordlist = localStorage.getItem("wordlist");
 
-    if (!wordlist.includes(guess.toLowerCase()))
-    {
+    if (!wordlist.includes(guess.toLowerCase())) {
         return;
     }
 
@@ -175,6 +262,62 @@ function guess() {
         return;
     }
 
-    localStorage.setItem('current_attempt', Number(attempt) + 1);
-    enableAndSelectCurrent();
+    const grade = gradeGuess(guess);
+
+    for (let i = 0; i < grade.length; i++) {
+        switch (grade[i]) {
+            case "0":
+                board.children[attempt].children[1].children[i].style.backgroundColor = "red";
+                break;
+            case "1":
+                board.children[attempt].children[1].children[i].style.backgroundColor = "gold";
+                break;
+            case "2":
+                board.children[attempt].children[1].children[i].style.backgroundColor = "green";
+                break;
+        }
+
+        for (let r = 0; r < keyboard.children.length; r++) {
+            for (let c = 0; c < keyboard.children[r].children.length; c++) {
+                if (guess[i] == keyboard.children[r].children[c].textContent && grade[i] == "0") {
+                    keyboard.children[r].children[c].disabled = true;
+                }
+            }
+        }
+    }
+
+    if (!(grade.includes("0")) && !(grade.includes("1"))) {
+        // Guessed right! Yay!
+        board.children[attempt].children[0].disabled = true;
+        console.log("Victory!");
+        endGame(true);
+    }
+    else if (Number(attempt) + 1 >= localStorage.getItem('attempts')) {
+        // Guessed wrong and ran out of attempts
+        board.children[attempt].children[0].disabled = true;
+        console.log("Defeat!");
+        endGame(false);
+    }
+    else {
+        // Guessed wrong, but there's still more attempts
+        localStorage.setItem('current_attempt', Number(attempt) + 1);
+        enableAndSelectCurrent();
+    }
+}
+
+function endGame(won) {
+    const endscreen = document.querySelector(".endscreen");
+    document.querySelector(".keyboard").style.visiblity = "hidden";
+    document.querySelector(".regularbuttons").style.visibility = "hidden";
+    document.querySelector(".endbuttons").style.visibility = "visible";
+    endscreen.style.visibility = "visible";
+
+    if (won) {
+        endscreen.children[0].textContent = "YOU WIN!";
+    } else {
+        endscreen.children[0].textContent = "YOU LOSE!";
+    }
+
+    const secret_word = localStorage.getItem("secretword");
+    endscreen.children[1].textContent = "The secret word was " + secret_word;
 }
