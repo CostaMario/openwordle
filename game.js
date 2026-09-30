@@ -8,7 +8,26 @@ function startGame() {
 
     console.log("Starting game with " + word_length + " letter words, " + attempts + " attempts");
 
-    fetch('wordlists/'+word_length+'.txt').then(response => {console.log(response)});
+    fetch('wordlists/' + word_length + '.txt')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(data => {
+            const wordlist = data.split('\n');
+
+            localStorage.setItem("wordlist", wordlist);
+
+            const secret_word = wordlist[Math.floor(Math.random() * wordlist.length)];
+            console.log(secret_word);
+
+            localStorage.setItem("secretword", secret_word);
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
 
     // Hide main menu and show game div
     const main_menu = document.querySelector(".mainmenu");
@@ -119,14 +138,19 @@ function enableAndSelectCurrent(input) {
 function guess() {
     const board = document.querySelector(".board");
     const attempt = localStorage.getItem('current_attempt');
-    if (attempt >= board.children.length)
+    if (attempt >= board.children.length) {
+        return;
+    }
+
+    const guess = board.children[attempt].children[0].value;
+    const wordlist = localStorage.getItem("wordlist");
+
+    if (!wordlist.includes(guess.toLowerCase()))
     {
         return;
     }
-    const guess = board.children[attempt].children[0].value;
 
-    if (guess.length < localStorage.getItem('wordlength'))
-    {
+    if (guess.length < localStorage.getItem('wordlength')) {
         return;
     }
 
