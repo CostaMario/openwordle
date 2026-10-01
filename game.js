@@ -231,15 +231,18 @@ function gradeGuess(guess) {
             grade += "0";
         }
     }
+    
+    let grade_arr = grade.split('');
 
-    for (let i = 0; i < secret_word.length; i++) {
-        if (grade[i] != "2" && guess[i] in letters_count && letters_count[guess[i]] > 0) {
+    for (let i = 0; i < secret_word.length; i++) { 
+        if (grade[i] != "2" && letters_count.hasOwnProperty(guess[i]) && letters_count[guess[i]] > 0) {
             letters_count[guess[i]]--;
-            grade[i] = "1";
+            console.log(guess[i]);
+            grade_arr[i] = "1";
         }
     }
 
-    return grade;
+    return grade_arr.join('');
 }
 
 function guess() {
@@ -264,6 +267,8 @@ function guess() {
 
     const grade = gradeGuess(guess);
 
+    let corrects = [];
+
     for (let i = 0; i < grade.length; i++) {
         switch (grade[i]) {
             case "0":
@@ -277,14 +282,21 @@ function guess() {
                 break;
         }
 
+        if (grade[i] == "1") {
+            corrects.push(guess[i]);
+        }
+    }
+
+    for (let i = 0; i < grade.length; i++) {
         for (let r = 0; r < keyboard.children.length; r++) {
             for (let c = 0; c < keyboard.children[r].children.length; c++) {
-                if (guess[i] == keyboard.children[r].children[c].textContent && grade[i] == "0") {
+                if (guess[i] == keyboard.children[r].children[c].textContent && grade[i] == "0" && !(corrects.includes(guess[i]))) {
                     keyboard.children[r].children[c].disabled = true;
                 }
             }
         }
     }
+
 
     if (!(grade.includes("0")) && !(grade.includes("1"))) {
         // Guessed right! Yay!
